@@ -13,6 +13,7 @@ public class Main
 {
 	public static void main(String[] args)
 	{
+		//Hello
 		//Example execution using the Student Database:
 		HashMap<String, String> dummySQLDatabase = new HashMap<>();
 		
