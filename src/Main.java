@@ -1,0 +1,134 @@
+import java.io.FileWriter;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map.Entry;
+
+import org.apache.jena.rdf.model.*;
+
+public class Main 
+{
+	public static void main(String[] args)
+	{
+		//Example execution using the Student Database:
+		HashMap<String, String> dummySQLDatabase = new HashMap<>();
+		
+		//Student
+		dummySQLDatabase.put("Sid", "1");
+		dummySQLDatabase.put("Name", "Bill");
+		dummySQLDatabase.put("Addr", "111 Isle Street");
+		
+		//Course
+		dummySQLDatabase.put("Cid", "26");
+		dummySQLDatabase.put("Subject", "EECS");
+		dummySQLDatabase.put("Number", "433");
+		
+		//Taken
+		dummySQLDatabase.put("Grade", "A");
+		
+		// create an empty Model
+		Model model = ModelFactory.createDefaultModel();
+
+    	Connection conn = null;
+    	 
+		try {
+			String dbURL = "jdbc:sqlserver://localhost:1433";
+			String user = "test_user";
+			String pass = "password";
+			conn = DriverManager.getConnection(dbURL, user, pass);
+			conn.setCatalog("Test");
+			
+			for (String tableName : DatabaseInfoExtractor.getTableNames(conn)) 
+			{
+				HashMap<String, Property> propertyMap = DatabaseInfoExtractor.getPropertyMap(model, conn, tableName);
+				
+				String url = formatPrimaryUrl(dummySQLDatabase, conn, tableName);
+				
+				HashMap<String, String> foreignKeys = DatabaseInfoExtractor.getForeignKeys(conn, tableName);
+				
+				LinkedList<String> columns = DatabaseInfoExtractor.getColumnNames(conn, tableName);
+				
+				/*
+				 * So I originally had these two lines to help reduce redundancy in the datastore, however, I realized
+				 * that if someone wanted the value of primary or foreign keys, like the sid, the only way they would be able to get them would be to
+				 * extract it from the URL. If you like the datastore being set up this way, feel free to remove all of this and the two commented 
+				 * out lines below. If you want to see what it is like with these two lines, uncomment them and also uncomment 
+				 * the same lines in getPropertyMap in DatabaseInfoExtractor.  
+				 */
+				//columns.removeAll(DatabaseInfoExtractor.getPrimaryKeys(conn, tableName));
+		    	//columns.removeAll(foreignKeys.keySet());
+		    	
+		    	Resource resource = model.createResource(url);
+		    	
+		    	for (String column : columns) 
+		    	{
+		    		resource.addProperty(propertyMap.get(column), dummySQLDatabase.get(column));
+				}
+		    	
+		    	for (Entry<String, String> foreignKey : foreignKeys.entrySet())
+		    	{
+		    		resource.addProperty(propertyMap.get("FK" + foreignKey.getKey()), formatPrimaryUrl(dummySQLDatabase, conn, foreignKey.getValue()));
+		    	}
+			}
+		} catch (SQLException ex) {
+            ex.printStackTrace();
+        } catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		printModel(model); 
+		
+		FileWriter writer = null;
+		
+		try {
+			writer = new FileWriter("C:\\Users\\Bryce\\Desktop\\asdf.rdf");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		model.write(writer);
+	}
+
+	/*
+	 *  This is only temporary. You can probably find a better way to build the url. 
+	 *  I would like to use a url to represent the primary keys of the table.
+	 */
+	private static String formatPrimaryUrl(HashMap<String, String> dummySQLDatabase, Connection conn, String tableName)
+			throws Exception, SQLException {
+		String url = DatabaseInfoExtractor.getPrimaryKeyUrl(conn, tableName);
+		for (String primaryKey : DatabaseInfoExtractor.getPrimaryKeys(conn, tableName)) 
+		{
+			url = url.replaceFirst(primaryKey, dummySQLDatabase.get(primaryKey));
+		}
+		return url;
+	}
+
+	private static void printModel(Model model) {
+		// list the statements in the Model
+		StmtIterator iter = model.listStatements();
+
+		// print out the predicate, subject and object of each statement
+		while (iter.hasNext()) {
+		    Statement stmt      = iter.nextStatement();  // get next statement
+		    Resource  subject   = stmt.getSubject();     // get the subject
+		    Property  predicate = stmt.getPredicate();   // get the predicate
+		    RDFNode   object    = stmt.getObject();      // get the object
+
+		    System.out.print(subject.toString());
+		    System.out.print(" " + predicate.toString() + " ");
+		    if (object instanceof Resource) {
+		       System.out.print(object.toString());
+		    } else {
+		        // object is a literal
+		        System.out.print(" \"" + object.toString() + "\"");
+		    }
+
+		    System.out.println(" .");
+		}
+	}
+}
