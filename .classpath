@@ -4,5 +4,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JenaLibs"/>
 	<classpathentry kind="lib" path="C:/Users/Bryce/Downloads/%ProgramFiles%/sqljdbc_6.0/enu/sqljdbc4.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Bryce/Downloads/apache-jena-3.1.0/lib/commons-csv-1.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
