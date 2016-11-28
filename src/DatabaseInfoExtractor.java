@@ -147,7 +147,7 @@ public class DatabaseInfoExtractor
     
     public static HashMap<String, Property> getPropertyMap(Model model, Connection conn, String tableName) throws SQLException
     {
-    	String namespace = "http://example.org/conn.getCatalog()" + "#";
+    	String namespace = "http://example.org/" + conn.getCatalog() + "#";
     	
     	HashMap<String, Property> propertyMap = new HashMap<>();
     	

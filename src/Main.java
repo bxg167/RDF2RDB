@@ -86,7 +86,7 @@ public class Main
 		FileWriter writer = null;
 		
 		try {
-			writer = new FileWriter("C:\\Users\\Bryce\\Desktop\\asdf.rdf");
+			writer = new FileWriter(".\\asdf.rdf");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
