@@ -13,6 +13,7 @@ public class Main
 {
 	public static void main(String[] args)
 	{
+		
 		//Hello
 		//Example execution using the Student Database:
 		HashMap<String, String> dummySQLDatabase = new HashMap<>();
@@ -36,7 +37,7 @@ public class Main
     	Connection conn = null;
     	 
 		try {
-			String dbURL = "jdbc:sqlserver://localhost:1433";
+			String dbURL = "jdbc:sqlserver://localhost:1433;instance=SQLEXPRESS";
 			String user = "test_user";
 			String pass = "password";
 			conn = DriverManager.getConnection(dbURL, user, pass);
@@ -66,8 +67,11 @@ public class Main
 		    	
 		    	for (String column : columns) 
 		    	{
-		    		resource.addProperty(propertyMap.get(column), dummySQLDatabase.get(column));
-				}
+		    		java.sql.ResultSet rs =DatabaseInfoExtractor.findObject(conn,tableName,column);
+		    		while(rs.next()){
+		    			resource.addProperty(propertyMap.get(column),rs.getString(column) );
+		    		}
+		    	}
 		    	
 		    	for (Entry<String, String> foreignKey : foreignKeys.entrySet())
 		    	{

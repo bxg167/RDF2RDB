@@ -204,5 +204,11 @@ public class DatabaseInfoExtractor
 		}
 		
 	}
+	public static ResultSet findObject(Connection conn, String tableName,String col) throws SQLException{
+		java.sql.Statement stmt = conn.createStatement();
+		String query = "SELECT "+col+ " FROM "+ tableName;
+		java.sql.ResultSet rs = stmt.executeQuery(query);
+		return rs;
+	}
 	
 }
