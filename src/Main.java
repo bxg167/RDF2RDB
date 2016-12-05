@@ -66,12 +66,12 @@ public class Main
 		    	java.sql.ResultSet pkobjects = DatabaseInfoExtractor.findObject(conn,tableName,primaryKey);
 		    	while(pkobjects.next()){
 		    		String url = updateBasicUrlWithKey(basicUrl,pkobjects.getString(primaryKey),primaryKey);
-		    		System.out.println(url);
+		    		//System.out.println(url);
 		    		Resource resource = model.createResource(url);
 		    	
 		    	for (String column : columns) 
 		    	{
-		    		java.sql.ResultSet rs =DatabaseInfoExtractor.findObject(conn,tableName,column);
+		    		java.sql.ResultSet rs =DatabaseInfoExtractor.findObject(conn,tableName,column,pkobjects.getString(primaryKey),primaryKey);
 		    		while(rs.next()){
 		    			resource.addProperty(propertyMap.get(column),rs.getString(column) );
 		    		}
@@ -88,7 +88,7 @@ public class Main
 			e.printStackTrace();
 		}
 		
-		//printModel(model); 
+		printModel(model); 
 		
 		FileWriter writer = null;
 		
