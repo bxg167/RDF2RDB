@@ -47,7 +47,8 @@ public class Main
 			{
 				HashMap<String, Property> propertyMap = DatabaseInfoExtractor.getPropertyMap(model, conn, tableName);
 				
-				String url = formatPrimaryUrl(dummySQLDatabase, conn, tableName);
+				String basicUrl = formatPrimaryUrl(conn, tableName);
+				String primaryKey = getPrimaryKeyForUrl(conn,tableName);
 				
 				HashMap<String, String> foreignKeys = DatabaseInfoExtractor.getForeignKeys(conn, tableName);
 				
@@ -62,8 +63,11 @@ public class Main
 				 */
 				//columns.removeAll(DatabaseInfoExtractor.getPrimaryKeys(conn, tableName));
 		    	//columns.removeAll(foreignKeys.keySet());
-		    	
-		    	Resource resource = model.createResource(url);
+		    	java.sql.ResultSet pkobjects = DatabaseInfoExtractor.findObject(conn,tableName,primaryKey);
+		    	while(pkobjects.next()){
+		    		String url = updateBasicUrlWithKey(basicUrl,pkobjects.getString(primaryKey),primaryKey);
+		    		System.out.println(url);
+		    		Resource resource = model.createResource(url);
 		    	
 		    	for (String column : columns) 
 		    	{
@@ -75,17 +79,16 @@ public class Main
 		    	
 		    	for (Entry<String, String> foreignKey : foreignKeys.entrySet())
 		    	{
-		    		resource.addProperty(propertyMap.get("FK" + foreignKey.getKey()), formatPrimaryUrl(dummySQLDatabase, conn, foreignKey.getValue()));
-		    	}
-			}
-		} catch (SQLException ex) {
+		    		resource.addProperty(propertyMap.get("FK" + foreignKey.getKey()), formatPrimaryUrl(conn, foreignKey.getValue()));
+		    	}}}}
+	 catch (SQLException ex) {
             ex.printStackTrace();
         } catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
-		printModel(model); 
+		//printModel(model); 
 		
 		FileWriter writer = null;
 		
@@ -97,20 +100,25 @@ public class Main
 		}
 		
 		model.write(writer);
+	
 	}
 
 	/*
 	 *  This is only temporary. You can probably find a better way to build the url. 
 	 *  I would like to use a url to represent the primary keys of the table.
 	 */
-	private static String formatPrimaryUrl(HashMap<String, String> dummySQLDatabase, Connection conn, String tableName)
+	private static String formatPrimaryUrl(Connection conn, String tableName)
 			throws Exception, SQLException {
 		String url = DatabaseInfoExtractor.getPrimaryKeyUrl(conn, tableName);
-		for (String primaryKey : DatabaseInfoExtractor.getPrimaryKeys(conn, tableName)) 
-		{
-			url = url.replaceFirst(primaryKey, dummySQLDatabase.get(primaryKey));
-		}
+		//System.out.println(url);
 		return url;
+	}
+	
+	private static String updateBasicUrlWithKey(String basic, String replacement, String primaryKey){
+		return basic.replaceFirst(primaryKey,replacement);
+	}
+	private static String getPrimaryKeyForUrl(Connection conn, String tableName) throws SQLException{
+		return DatabaseInfoExtractor.getPrimaryKeys(conn, tableName).get(0);
 	}
 
 	private static void printModel(Model model) {
