@@ -14,23 +14,6 @@ public class Main
 	public static void main(String[] args)
 	{
 		
-		//Hello
-		//Example execution using the Student Database:
-		HashMap<String, String> dummySQLDatabase = new HashMap<>();
-		
-		//Student
-		dummySQLDatabase.put("Sid", "1");
-		dummySQLDatabase.put("Name", "Bill");
-		dummySQLDatabase.put("Addr", "111 Isle Street");
-		
-		//Course
-		dummySQLDatabase.put("Cid", "26");
-		dummySQLDatabase.put("Subject", "EECS");
-		dummySQLDatabase.put("Number", "433");
-		
-		//Taken
-		dummySQLDatabase.put("Grade", "A");
-		
 		// create an empty Model
 		Model model = ModelFactory.createDefaultModel();
 
