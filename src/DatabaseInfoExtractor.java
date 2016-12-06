@@ -213,7 +213,12 @@ public class DatabaseInfoExtractor
 	public static ResultSet findObject(Connection conn, String tableName,String col,String pkObj, String primaryKey) throws SQLException{
 		java.sql.Statement stmt = conn.createStatement();
 		String query = "SELECT "+col+ " FROM "+ tableName + " WHERE "+ pkObj+"= " +tableName + "." + primaryKey;
-		System.out.println(query);
+		java.sql.ResultSet rs = stmt.executeQuery(query);
+		return rs;
+	}
+	public static ResultSet findObject(Connection conn, String tableName,String col,String pkObj, String primaryKey,String foreignKey, String fkObj) throws SQLException{
+		java.sql.Statement stmt = conn.createStatement();
+		String query = "SELECT "+col+ " FROM "+ tableName + " WHERE "+ pkObj+"= " +tableName + "." + primaryKey+ " AND "+ fkObj+ "=" +tableName+ "." +foreignKey;
 		java.sql.ResultSet rs = stmt.executeQuery(query);
 		return rs;
 	}

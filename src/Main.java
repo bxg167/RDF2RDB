@@ -9,6 +9,8 @@ import java.util.Map.Entry;
 
 import org.apache.jena.rdf.model.*;
 
+import com.microsoft.sqlserver.jdbc.SQLServerException;
+
 public class Main 
 {
 	public static void main(String[] args)
@@ -49,21 +51,78 @@ public class Main
 		    	java.sql.ResultSet pkobjects = DatabaseInfoExtractor.findObject(conn,tableName,primaryKey);
 		    	while(pkobjects.next()){
 		    		String url = updateBasicUrlWithKey(basicUrl,pkobjects.getString(primaryKey),primaryKey);
-		    		//System.out.println(url);
+		    		/*if a table has a fk add it to url*/
+		    		if(foreignKeys.entrySet().isEmpty()){
 		    		Resource resource = model.createResource(url);
 		    	
-		    	for (String column : columns) 
-		    	{
-		    		java.sql.ResultSet rs =DatabaseInfoExtractor.findObject(conn,tableName,column,pkobjects.getString(primaryKey),primaryKey);
-		    		while(rs.next()){
-		    			resource.addProperty(propertyMap.get(column),rs.getString(column) );
+				    	for (String column : columns) 
+				    	{
+				    		java.sql.ResultSet rs =DatabaseInfoExtractor.findObject(conn,tableName,column,pkobjects.getString(primaryKey),primaryKey);
+				    		while(rs.next()){
+				    			resource.addProperty(propertyMap.get(column),rs.getString(column) );
+				    		}
+				    	}
 		    		}
-		    	}
-		    	
-		    	for (Entry<String, String> foreignKey : foreignKeys.entrySet())
-		    	{
-		    		resource.addProperty(propertyMap.get("FK" + foreignKey.getKey()), formatPrimaryUrl(conn, foreignKey.getValue()));
-		    	}}}}
+		    		else{/*need to handle when there is a fk*/
+		    			//System.out.println(url);
+		    			for (Entry<String, String> foreignKey : foreignKeys.entrySet()){
+		    				if(!foreignKey.getKey().equals(primaryKey)){
+		  	    				java.sql.Statement stmt = conn.createStatement();
+			    				String query = "SELECT "+foreignKey.getKey()+" FROM " + tableName+ " WHERE " +pkobjects.getString(primaryKey)+ "="+ tableName +"."+ primaryKey;
+			    				java.sql.ResultSet rs = stmt.executeQuery(query);
+			    				while(rs.next()){
+			    					String obj = rs.getString(foreignKey.getKey());
+			    					if(!obj.equals(pkobjects.getString(primaryKey))){
+			    						Resource resource = null;
+			    						for (String column : columns) 
+			    				    	{
+			    							if(!column.equals(primaryKey)){
+				    				    		java.sql.ResultSet result =DatabaseInfoExtractor.findObject(conn,tableName,column,pkobjects.getString(primaryKey),primaryKey,foreignKey.getKey(),obj );
+				    				    		while(result.next()){
+				    				    			try{
+				    				    			if(obj.equals(result.getString(column)))
+				    				    			url = updateBasicUrlWithKey(url,result.getString(column),foreignKey.getKey());
+							     					resource = model.createResource(url);
+				    				    			resource.addProperty(propertyMap.get(column),result.getString(column));
+				    				    			}catch(SQLServerException exep){}
+				    				    		}
+			    							}
+			    				    	}
+			    							for (Entry<String, String> fKey : foreignKeys.entrySet()){
+			    								if(resource!=null)
+			    									resource.addProperty(propertyMap.get("FK" + fKey.getKey()), formatPrimaryUrl(conn, fKey.getValue()));
+			    								
+			    							
+			    							}
+			    					}
+			    					
+			    				}
+			    			}
+		    			}
+		    			//for (Entry<String, String> foreignKey : foreignKeys.entrySet())
+					    	//{
+					    		//resource.addProperty(propertyMap.get("FK" + foreignKey.getKey()), formatPrimaryUrl(conn, foreignKey.getValue()));
+					    	//}
+		    				//System.out.println(foreignKey.getKey() + " "+foreignKey.getValue());
+		    				//java.sql.ResultSet fkObjs = DatabaseInfoExtractor.findObject(conn,foreignKey.getValue(),foreignKey.getKey());
+		    				//System.out.println(fkObjs.getString(foreignKey.getKey()));
+		    			//}
+		    			//Resource resource = model.createResource(url);
+				    	
+				    	//for (String column : columns) 
+				    	//{
+				    		//java.sql.ResultSet rs =DatabaseInfoExtractor.findObject(conn,tableName,column,pkobjects.getString(primaryKey),primaryKey);
+				    		//while(rs.next()){
+				    			//resource.addProperty(propertyMap.get(column),rs.getString(column) );
+				    		//}
+				    	//}
+				    	
+				    	//for (Entry<String, String> foreignKey : foreignKeys.entrySet())
+				    	//{
+				    		//resource.addProperty(propertyMap.get("FK" + foreignKey.getKey()), formatPrimaryUrl(conn, foreignKey.getValue()));
+				    	//}
+		    		}}}}
+				
 	 catch (SQLException ex) {
             ex.printStackTrace();
         } catch (Exception e) {
