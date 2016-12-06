@@ -38,7 +38,6 @@ public class Main
 				HashMap<String, String> foreignKeys = DatabaseInfoExtractor.getForeignKeys(conn, tableName);
 				
 				LinkedList<String> columns = DatabaseInfoExtractor.getColumnNames(conn, tableName);
-				
 				/*
 				 * So I originally had these two lines to help reduce redundancy in the datastore, however, I realized
 				 * that if someone wanted the value of primary or foreign keys, like the sid, the only way they would be able to get them would be to
@@ -62,66 +61,54 @@ public class Main
 				    			resource.addProperty(propertyMap.get(column),rs.getString(column) );
 				    		}
 				    	}
-		    		}
-		    		else{/*need to handle when there is a fk*/
-		    			//System.out.println(url);
-		    			for (Entry<String, String> foreignKey : foreignKeys.entrySet()){
-		    				if(!foreignKey.getKey().equals(primaryKey)){
-		  	    				java.sql.Statement stmt = conn.createStatement();
-			    				String query = "SELECT "+foreignKey.getKey()+" FROM " + tableName+ " WHERE " +pkobjects.getString(primaryKey)+ "="+ tableName +"."+ primaryKey;
-			    				java.sql.ResultSet rs = stmt.executeQuery(query);
-			    				while(rs.next()){
-			    					String obj = rs.getString(foreignKey.getKey());
-			    					if(!obj.equals(pkobjects.getString(primaryKey))){
-			    						Resource resource = null;
-			    						for (String column : columns) 
-			    				    	{
-			    							if(!column.equals(primaryKey)){
-				    				    		java.sql.ResultSet result =DatabaseInfoExtractor.findObject(conn,tableName,column,pkobjects.getString(primaryKey),primaryKey,foreignKey.getKey(),obj );
-				    				    		while(result.next()){
-				    				    			try{
-				    				    			if(obj.equals(result.getString(column)))
-				    				    			url = updateBasicUrlWithKey(url,result.getString(column),foreignKey.getKey());
-							     					resource = model.createResource(url);
-				    				    			resource.addProperty(propertyMap.get(column),result.getString(column));
-				    				    			}catch(SQLServerException exep){}
-				    				    		}
-			    							}
-			    				    	}
-			    							for (Entry<String, String> fKey : foreignKeys.entrySet()){
-			    								if(resource!=null)
-			    									resource.addProperty(propertyMap.get("FK" + fKey.getKey()), formatPrimaryUrl(conn, fKey.getValue()));
-			    								
-			    							
-			    							}
-			    					}
-			    					
-			    				}
-			    			}
-		    			}
-		    			//for (Entry<String, String> foreignKey : foreignKeys.entrySet())
-					    	//{
-					    		//resource.addProperty(propertyMap.get("FK" + foreignKey.getKey()), formatPrimaryUrl(conn, foreignKey.getValue()));
-					    	//}
-		    				//System.out.println(foreignKey.getKey() + " "+foreignKey.getValue());
-		    				//java.sql.ResultSet fkObjs = DatabaseInfoExtractor.findObject(conn,foreignKey.getValue(),foreignKey.getKey());
-		    				//System.out.println(fkObjs.getString(foreignKey.getKey()));
-		    			//}
-		    			//Resource resource = model.createResource(url);
-				    	
-				    	//for (String column : columns) 
-				    	//{
-				    		//java.sql.ResultSet rs =DatabaseInfoExtractor.findObject(conn,tableName,column,pkobjects.getString(primaryKey),primaryKey);
-				    		//while(rs.next()){
-				    			//resource.addProperty(propertyMap.get(column),rs.getString(column) );
-				    		//}
-				    	//}
-				    	
-				    	//for (Entry<String, String> foreignKey : foreignKeys.entrySet())
-				    	//{
-				    		//resource.addProperty(propertyMap.get("FK" + foreignKey.getKey()), formatPrimaryUrl(conn, foreignKey.getValue()));
-				    	//}
-		    		}}}}
+		    		}}}
+			for (String tableName : DatabaseInfoExtractor.getTableNames(conn)){
+				HashMap<String, Property> propertyMap = DatabaseInfoExtractor.getPropertyMap(model, conn, tableName);
+				
+				String basicUrl = formatPrimaryUrl(conn, tableName);
+				String primaryKey = getPrimaryKeyForUrl(conn,tableName);
+				
+				HashMap<String, String> foreignKeys = DatabaseInfoExtractor.getForeignKeys(conn, tableName);
+				
+				LinkedList<String> columns = DatabaseInfoExtractor.getColumnNames(conn, tableName);
+				if(!foreignKeys.entrySet().isEmpty()){
+					LinkedList<Entry<String,String> > keys= new LinkedList<Entry<String,String>>();
+					for(Entry<String,String> foreignKey: foreignKeys.entrySet()){
+						keys.add(foreignKey);
+					}
+					/*Create query*/
+					java.sql.Statement stmt = conn.createStatement();
+					String query = "SELECT *"+ " FROM "+ tableName;
+					java.sql.ResultSet rs = stmt.executeQuery(query);
+					/*for each result set*/
+					while(rs.next()){
+						/*fill in correct url*/
+						String url = basicUrl;
+						for(int i =0; i< keys.size();i++){
+							//System.out.println(keys.get(i).getKey());
+							url = updateBasicUrlWithKey(url,rs.getString(keys.get(i).getKey()),keys.get(i).getKey());
+						}
+						//System.out.println(url);
+						/*create resource*/
+						Resource resource = model.createResource(url);
+						/*for every column*/
+						for(String column :columns){
+							resource.addProperty(propertyMap.get(column), rs.getString(column));
+						}
+						/*for every fk relationship*/
+						for(Entry<String,String> fk : keys){
+							String objecturl =formatPrimaryUrl(conn, fk.getValue());
+							objecturl = updateBasicUrlWithKey(objecturl, rs.getString(fk.getKey()),fk.getKey());
+							//System.out.println(objecturl);
+							resource.addProperty(propertyMap.get("FK" + fk.getKey()), objecturl);
+						}
+							/*create correct object url*/
+							/*add property*/
+					}
+				}
+
+			}}
+		    	
 				
 	 catch (SQLException ex) {
             ex.printStackTrace();
