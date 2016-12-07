@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map.Entry;
@@ -22,7 +23,7 @@ public class Main
     	Connection conn = null;
     	 
 		try {
-			String dbURL = "jdbc:sqlserver://localhost:1433;instance=SQLEXPRESS";
+			String dbURL = "jdbc:sqlserver://localhost:1433";
 			String user = "test_user";
 			String pass = "password";
 			conn = DriverManager.getConnection(dbURL, user, pass);
@@ -58,13 +59,19 @@ public class Main
 					Resource resource = model.createResource(url);
 					/*for every column*/
 					for(String column :columns){
-						resource.addProperty(propertyMap.get(column), rs.getString(column));
+						if (tableName.equals("Taken"))
+								System.out.println();;
+						
+						//If the column is a foreign key column, the value will automatically be added when we add the referencing object.
+						if (!foreignKeys.keySet().contains(column))
+							resource.addProperty(propertyMap.get(column), rs.getString(column));
 					}
 					/*for every fk relationship*/
 					for(Entry<String,String> fk : fkeys){
 						String objecturl =formatPrimaryUrl(conn, fk.getValue());
 						objecturl = updateBasicUrlWithKey(objecturl, rs.getString(fk.getKey()),fk.getKey());
-						resource.addProperty(propertyMap.get("FK" + fk.getKey()), objecturl);
+						
+						resource.addProperty(propertyMap.get("FK" + fk.getKey()), model.getResource(objecturl));
 					}
 				}
 			}
