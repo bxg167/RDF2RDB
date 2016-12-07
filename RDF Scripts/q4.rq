@@ -1,0 +1,20 @@
+PREFIX Test: <http://example.org/Test#>
+
+SELECT ?name
+WHERE
+ { 
+	?student Test:Name ?name .
+	?taken Test:Taken-Student ?student
+	
+	FILTER NOT EXISTS
+	{
+		SELECT ?student
+		WHERE
+		 { 
+			?taken2 Test:Taken-Student ?student .
+			?taken2 Test:Taken-Classes ?class2 .
+			?class2 Test:Subject ?subject .
+			FILTER(?subject != "EECS"). 
+		}
+	}
+}

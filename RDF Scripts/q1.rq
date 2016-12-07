@@ -1,0 +1,9 @@
+PREFIX Test: <http://example.org/Test#>
+
+SELECT ?cid
+WHERE
+ { 
+	?class Test:Subject "CHEM" .
+	?class Test:Cid ?cid .
+	?taken Test:Taken-Classes ?class .
+}

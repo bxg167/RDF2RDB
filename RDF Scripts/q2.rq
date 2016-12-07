@@ -1,0 +1,8 @@
+PREFIX Test: <http://example.org/Test#>
+
+SELECT ?name
+WHERE
+ { 
+	?student Test:Name ?name .
+	FILTER regex(?name, "^A")
+}
