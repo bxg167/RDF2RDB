@@ -14,6 +14,7 @@ import org.apache.jena.rdf.model.Property;
 
 public class DatabaseInfoExtractor 
 {	
+	//For testing purposes only.
     public static void main(String[] args) {
     	Connection conn = null;
  
@@ -29,6 +30,7 @@ public class DatabaseInfoExtractor
 			getPropertyMap(model, conn, "Taken");
 			getPropertyMap(model, conn, "Student");
 			
+			//Print out parts of the database
 			//printPrimaryKeys(conn, "Taken");
 			//printForeignKeys(conn, "Taken");
 			//printTables(conn);
@@ -37,7 +39,6 @@ public class DatabaseInfoExtractor
 		} catch (SQLException ex) {
             ex.printStackTrace();
         } catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
     }
@@ -74,14 +75,6 @@ public class DatabaseInfoExtractor
 		return primaryKeys;
 	}
 	
-    /**
-     * Looks at the given table, using the given connection, and finds the foreign keys that exist in the table.
-     * A map, whose key is the foreign key's name and value is the table's name that it references, will be returned.
-     * @param conn
-     * @param tableName
-     * @return
-     * @throws SQLException
-     */
     public static HashMap<String, String> getForeignKeys(Connection conn, String tableName) throws SQLException
 	{
 		HashMap<String, String> foreignKeys = new HashMap<String, String>();
@@ -115,14 +108,6 @@ public class DatabaseInfoExtractor
     	return getPrimaryKeyUrl(conn, tableName, "http://www.example.org");
     }
     
-    /**
-     * Reason for using a url for primary keys: https://www.w3.org/2014/data-shapes/wiki/Primary_Keys_with_URI_Pattern
-     * @param conn
-     * @param tableName
-     * @param resourceName
-     * @return
-     * @throws Exception
-     */
     public static String getPrimaryKeyUrl(Connection conn, String tableName, String resourceName) throws Exception
     {
 		String url = resourceName;
@@ -140,8 +125,6 @@ public class DatabaseInfoExtractor
     		url += "-" + key;
 		}
     	
-    	//Need to remove the last - that will be added within the for loop.
-    	
     	return url;
     }
     
@@ -153,10 +136,7 @@ public class DatabaseInfoExtractor
     	
     	LinkedList<String> columns = getColumnNames(conn, tableName);
     	HashMap<String, String> foreignKeys = getForeignKeys(conn, tableName);
-    	
-    	//columns.removeAll(getPrimaryKeys(conn, tableName));
-    	//columns.removeAll(foreignKeys.keySet());
-    	
+    	    	
     	for (String columnName : columns) 
     	{
 			Property tempProperty = model.createProperty(namespace + columnName);

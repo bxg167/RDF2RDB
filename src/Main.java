@@ -3,14 +3,11 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map.Entry;
 
 import org.apache.jena.rdf.model.*;
-
-import com.microsoft.sqlserver.jdbc.SQLServerException;
 
 public class Main 
 {
@@ -50,6 +47,7 @@ public class Main
 				java.sql.Statement stmt = conn.createStatement();
 				String query = "SELECT *"+ " FROM "+ tableName;
 				java.sql.ResultSet rs = stmt.executeQuery(query);
+
 				/*for each result set*/
 				while(rs.next()){
 					String url = basicUrl;
@@ -59,9 +57,6 @@ public class Main
 					Resource resource = model.createResource(url);
 					/*for every column*/
 					for(String column :columns){
-						if (tableName.equals("Taken"))
-								System.out.println();;
-						
 						//If the column is a foreign key column, the value will automatically be added when we add the referencing object.
 						if (!foreignKeys.keySet().contains(column))
 							resource.addProperty(propertyMap.get(column), rs.getString(column));
@@ -104,7 +99,7 @@ public class Main
 	private static String formatPrimaryUrl(Connection conn, String tableName)
 			throws Exception, SQLException {
 		String url = DatabaseInfoExtractor.getPrimaryKeyUrl(conn, tableName);
-		//System.out.println(url);
+
 		return url;
 	}
 	
